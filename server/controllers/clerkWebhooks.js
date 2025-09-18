@@ -68,3 +68,9 @@ const clerkWebhooks = async(req, res) => {
 };
 
 export default clerkWebhooks;
+
+// PS C:\Users\Muhib Ali SSD\Desktop\hotel-booking>    git push origin main
+// >> 
+// >> 
+// error: src refspec main does not match any
+// error: failed to push some refs to 'https://github.com/Anamta-kamran/hotel-booking.git'
