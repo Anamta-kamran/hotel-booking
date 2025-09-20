@@ -1,76 +1,69 @@
 import User from "../models/User.js";
 import { Webhook } from "svix";
 
-const clerkWebhooks = async(req, res) => {
+const clerkWebhooks = async (req, res) => {
+    console.log("🚨 WEBHOOK RECEIVED!", new Date());
+    console.log("Headers:", req.headers);
+    console.log("Body:", req.body);
+
     try {
-        console.log("Webhook received:", req.body.type);
-        
-        // Create a svix instance with clerk webhook secret 
+        // Create a svix instance for clerk webhooks verification
         const whook = new Webhook(process.env.CLERK_WEBHOOK_SECRET);
 
-        // Getting Headers
+        // Getting headers
         const headers = {
             "svix-id": req.headers["svix-id"],
             "svix-timestamp": req.headers["svix-timestamp"],
-            "svix-signature": req.headers["svix-signature"],
+            "svix-signature": req.headers["svix-signature"]
         };
 
         // Verifying headers
-        const payload = JSON.stringify(req.body);
-        await whook.verify(payload, headers);
+        await whook.verify(JSON.stringify(req.body), headers);
 
-        console.log("Webhook verified successfully");
-
-        // Getting data from request body 
+        // Getting data from body
         const { data, type } = req.body;
-        
-        console.log("Event type:", type);
-        console.log("User data:", data);
 
+        console.log("Event type:", type);
+        console.log("User data from Clerk:", data);
+
+        // Create user data object with safer field access
         const userData = {
             _id: data.id,
-            email: data.email_addresses[0].email_address,
-            username: (data.first_name || "") + " " + (data.last_name || ""),
-            image: data.image_url,
+            username: `${data.first_name || ''} ${data.last_name || ''}`.trim() || data.username || 'Unknown User',
+            email: data.email_addresses && data.email_addresses[0] ? data.email_addresses[0].email_address : data.primary_email_address || '',
+            image: data.image_url || data.profile_image_url || "",
         };
 
-        // Switch cases for different events 
-        switch(type) {
+        console.log("User data to save:", userData);
+
+        // Switch cases for different events
+        switch (type) {
             case "user.created": {
-                console.log("Creating user:", userData);
                 const newUser = await User.create(userData);
-                console.log("User created:", newUser);
-                break;
-            }
-            case "user.updated": {
-                console.log("Updating user:", data.id);
-                const updatedUser = await User.findByIdAndUpdate(data.id, userData, { new: true });
-                console.log("User updated:", updatedUser);
+                console.log("User created successfully:", newUser);
                 break;
             }
             case "user.deleted": {
-                console.log("Deleting user:", data.id);
-                const deletedUser = await User.findByIdAndDelete(data.id);
-                console.log("User deleted:", deletedUser);
+                await User.findByIdAndDelete(data.id);
+                console.log("User deleted:", data.id);
                 break;
             }
-            default:
+            case "user.updated": {
+                await User.findByIdAndUpdate(data.id, userData);
+                console.log("User updated:", data.id);
+                break;
+            }
+            default: 
                 console.log("Unhandled event type:", type);
                 break;
         }
-        
-        res.json({ success: true, message: "webhook received" });
-    } catch (error) {
-        console.log("Webhook error:", error.message);
-        console.log("Full error:", error);
-        res.status(400).json({ success: false, message: error.message });
+
+        res.status(200).json({ success: true, message: "webhook received" });
+    } catch (err) {
+        console.error("Webhook error:", err);
+        console.error("Full error:", err);
+        res.status(400).json({ success: false, message: err.message });
     }
 };
 
 export default clerkWebhooks;
-
-// PS C:\Users\Muhib Ali SSD\Desktop\hotel-booking>    git push origin main
-// >> 
-// >> 
-// error: src refspec main does not match any
-// error: failed to push some refs to 'https://github.com/Anamta-kamran/hotel-booking.git'
