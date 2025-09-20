@@ -54,6 +54,10 @@ import User from "../models/User.js";
 import { Webhook } from "svix";
 
 const clerkWebhooks = async (req, res) => {
+        console.log("🚨 WEBHOOK RECEIVED!", new Date());
+    console.log("Headers:", req.headers);
+    console.log("Body:", req.body);
+
     try {
         console.log("Webhook received:", req.body);
         
