@@ -1,15 +1,33 @@
+// {
+//   "version": 2,
+//   "builds": [
+//     {
+//       "src": "server/index.js",
+//       "use": "@vercel/node"
+//     }
+//   ],
+//   "routes": [
+//     {
+//       "src": "/(.*)",
+//       "dest": "server/index.js"
+//     }
+//   ],
+//   "env": {
+//     "NODE_ENV": "production"
+//   }
+// }
 {
   "version": 2,
   "builds": [
     {
-      "src": "server/index.js",
+      "src": "server.js",
       "use": "@vercel/node"
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "server/index.js"
+      "dest": "server.js"
     }
   ],
   "env": {
