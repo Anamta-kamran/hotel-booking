@@ -1,180 +1,117 @@
 // import User from "../models/User.js";
 // import { Webhook } from "svix";
 
-// const clerkWebhooks = async(req, res) => {
-//     try {
-//         console.log("Webhook received:", req.body.type);
-        
-//         // Create a svix instance with clerk webhook secret 
+// const clerkWebhooks = async (req, res) => {
+//     try{
+//         // create a svix instance for clerkwebhhoks verification
 //         const whook = new Webhook(process.env.CLERK_WEBHOOK_SECRET);
 
-//         // Getting Headers
+//         // getting header 
 //         const headers = {
 //             "svix-id": req.headers["svix-id"],
 //             "svix-timestamp": req.headers["svix-timestamp"],
-//             "svix-signature": req.headers["svix-signature"],
+//             "svix-signature": req.headers["svix-signature"]
 //         };
-
-//         // Verifying headers
-//         const payload = JSON.stringify(req.body);
-//         await whook.verify(payload, headers);
-
-//         console.log("Webhook verified successfully");
-
-//         // Getting data from request body 
-//         const { data, type } = req.body;
-        
-//         console.log("Event type:", type);
-//         console.log("User data:", data);
-
+//         // verifying headrers 
+//         await whook.verify(JSON.stringify(req.body), headers);
+//         // getting data form body 
+//         const {data , type} = req.body;
 //         const userData = {
-//             _id: data.id,
-//             email: data.email_addresses[0].email_address,
-//             username: (data.first_name || "") + " " + (data.last_name || ""),
-//             image: data.image_url,
-//         };
-
-//         // Switch cases for different events 
-//         switch(type) {
-//             case "user.created": {
-//                 console.log("Creating user:", userData);
-//                 const newUser = await User.create(userData);
-//                 console.log("User created:", newUser);
-//                 break;
-//             }
-//             case "user.updated": {
-//                 console.log("Updating user:", data.id);
-//                 const updatedUser = await User.findByIdAndUpdate(data.id, userData, { new: true });
-//                 console.log("User updated:", updatedUser);
-//                 break;
-//             }
-//             case "user.deleted": {
-//                 console.log("Deleting user:", data.id);
-//                 const deletedUser = await User.findByIdAndDelete(data.id);
-//                 console.log("User deleted:", deletedUser);
-//                 break;
-//             }
-//             default:
-//                 console.log("Unhandled event type:", type);
-//                 break;
+//             _id : data.id,
+//             username : data.first_name + " " + data.last_name,
+//             email : data.email_addresses[0].email_address,
+//             image : data.image_url,
 //         }
-        
-//         res.json({ success: true, message: "webhook received" });
-//     } catch (error) {
-//         console.log("Webhook error:", error.message);
-//         console.log("Full error:", error);
-//         res.status(400).json({ success: false, message: error.message });
+//         // switch cases for different events 
+//         switch(type){
+//             case "user.created" : {
+//                 await User.create(userData);
+//                 break;
+//             }
+//             case "user.deleted" : {
+//                 await User.findByIdAndDelete(data.id);
+//                 break;
+//             }
+//             case "user.updated" : {
+//                 await User.findByIdAndUpdate(data.id,userData);
+//                 break;
+//             }
+//             default: break;
+//         }
+//         res.json({success : true ,message : "webhook received"})
 //     }
-// };
 
+//     catch(err){
+//         console.log(err);
+//         res.json({success : false , message : "webhook error"})
+//     }
+// }
 // export default clerkWebhooks;
 
-// // PS C:\Users\Muhib Ali SSD\Desktop\hotel-booking>    git push origin main
-// // >> 
-// // >> 
-// // error: src refspec main does not match any
-// // error: failed to push some refs to 'https://github.com/Anamta-kamran/hotel-booking.git'
+
+
 import User from "../models/User.js";
 import { Webhook } from "svix";
 
 const clerkWebhooks = async (req, res) => {
     try {
-        console.log("Webhook received:", req.body?.type);
-        console.log("Full request body:", req.body);
+        console.log("Webhook received:", req.body);
         
-        // Create a svix instance with clerk webhook secret
+        // Create a svix instance for clerk webhooks verification
         const whook = new Webhook(process.env.CLERK_WEBHOOK_SECRET);
-        
-        // Getting Headers
+
+        // Getting headers
         const headers = {
             "svix-id": req.headers["svix-id"],
             "svix-timestamp": req.headers["svix-timestamp"],
-            "svix-signature": req.headers["svix-signature"],
+            "svix-signature": req.headers["svix-signature"]
         };
 
-        console.log("Headers:", headers);
-
         // Verifying headers
-        const payload = JSON.stringify(req.body);
-        await whook.verify(payload, headers);
+        await whook.verify(JSON.stringify(req.body), headers);
 
-        console.log("Webhook verified successfully");
-
-        // Getting data from request body
+        // Getting data from body
         const { data, type } = req.body;
 
         console.log("Event type:", type);
-        console.log("User data:", data);
+        console.log("User data from Clerk:", data);
 
-        // Check if required data exists
-        if (!data || !data.id) {
-            console.log("No user data found in webhook");
-            return res.status(400).json({ success: false, message: "No user data" });
-        }
-
-        // Create user data object
+        // Create user data object with correct field mapping
         const userData = {
-            _id: data.id, // Use Clerk's user ID as MongoDB _id
-            email: data.email_addresses?.[0]?.email_address || '',
-            username: (data.first_name || "") + " " + (data.last_name || ""),
-            image: data.image_url || '',
-            role: "user", // default role
-            recentSearchCities: []
+            _id: data.id,
+            username: data.first_name + " " + data.last_name,
+            email: data.email_addresses[0].email_address,
+            image: data.image_url || "", // Fixed: changed 'data' to 'image' and added fallback
         };
 
-        console.log("Prepared user data:", userData);
+        console.log("User data to save:", userData);
 
         // Switch cases for different events
         switch (type) {
             case "user.created": {
-                console.log("Creating user:", userData);
-                try {
-                    const newUser = await User.create(userData);
-                    console.log("User created successfully:", newUser);
-                } catch (createError) {
-                    console.log("Error creating user:", createError);
-                    // If user already exists, try to update instead
-                    if (createError.code === 11000) {
-                        console.log("User already exists, attempting update...");
-                        const updatedUser = await User.findByIdAndUpdate(
-                            data.id, 
-                            userData, 
-                            { new: true, upsert: true }
-                        );
-                        console.log("User updated instead:", updatedUser);
-                    } else {
-                        throw createError;
-                    }
-                }
-                break;
-            }
-            case "user.updated": {
-                console.log("Updating user:", data.id);
-                const updatedUser = await User.findByIdAndUpdate(
-                    data.id, 
-                    userData, 
-                    { new: true }
-                );
-                console.log("User updated:", updatedUser);
+                const newUser = await User.create(userData);
+                console.log("User created successfully:", newUser);
                 break;
             }
             case "user.deleted": {
-                console.log("Deleting user:", data.id);
-                const deletedUser = await User.findByIdAndDelete(data.id);
-                console.log("User deleted:", deletedUser);
+                await User.findByIdAndDelete(data.id);
+                console.log("User deleted:", data.id);
                 break;
             }
-            default:
+            case "user.updated": {
+                await User.findByIdAndUpdate(data.id, userData);
+                console.log("User updated:", data.id);
+                break;
+            }
+            default: 
                 console.log("Unhandled event type:", type);
                 break;
         }
 
         res.status(200).json({ success: true, message: "webhook received" });
-    } catch (error) {
-        console.log("Webhook error:", error.message);
-        console.log("Full error:", error);
-        console.log("Stack trace:", error.stack);
-        res.status(400).json({ success: false, message: error.message });
+    } catch (err) {
+        console.error("Webhook error:", err);
+        res.status(400).json({ success: false, message: err.message });
     }
 };
 
