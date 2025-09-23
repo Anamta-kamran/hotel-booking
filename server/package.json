@@ -1,8 +1,8 @@
 {
   "name": "server",
   "version": "1.0.0",
-  "description": "",
   "main": "server.js",
+  "type": "module",
   "scripts": {
     "server": "nodemon server.js",
     "start": "node server.js"
@@ -10,9 +10,9 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "module",
+  "description": "",
   "dependencies": {
-    "@clerk/express": "^1.7.31a",
+    "@clerk/express": "^1.7.33",
     "cloudinary": "^2.7.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.2",

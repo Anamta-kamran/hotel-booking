@@ -2,34 +2,23 @@ import express from "express";
 import "dotenv/config";
 import cors from "cors";
 import connectDB from "./configs/db.js";
-import { clerkMiddleware } from '@clerk/express';
+import { clerkMiddleware } from '@clerk/express'
 import clerkWebhooks from "./controllers/clerkWebhooks.js";
 
-connectDB();
 
-const app = express();
+connectDB()
+const app = express()
+app.use(cors()) //enable cross origin resource sharing
 
-// Enable cross-origin resource sharing
-app.use(cors());
+// middlewares 
+app.use(express.json())
+app.use(clerkMiddleware())
 
-// Webhook route - use POST specifically and handle raw body
-app.post("/api/clerk", express.raw({ type: 'application/json' }), clerkWebhooks);
+// Api to listen to clerk Webhooks 
+app.use("/api/clerk", clerkWebhooks)
 
-// Test route
-app.get("/api/clerk/test", (req, res) => {
-    console.log("Test route accessed!");
-    res.json({ 
-        message: "Webhook endpoint is reachable",
-        timestamp: new Date().toISOString()
-    });
-});
-
-// Other middleware
-app.use(express.json());
-app.use(clerkMiddleware());
-
-app.get('/', (req, res) => res.send("API is working"));
+app.get('/' , (req , res)=> res.send("Api is working"))
 
 const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT , ()=> {console.log (`server is running on port ${PORT}`)});
