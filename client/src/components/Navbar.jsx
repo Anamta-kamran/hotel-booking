@@ -9,6 +9,7 @@ const BookIcon = ()=>(
 </svg>
 )
 const Navbar = () => {
+
     const navLinks = [
         { name: 'Home', path: '/' },
         { name: 'Hotels', path: 'rooms' },
